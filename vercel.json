@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/leaderboard", "destination": "/api/leaderboard.ts" },
+    { "source": "/api/scores", "destination": "/api/scores.ts" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

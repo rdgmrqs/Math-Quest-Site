@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-neo-yellow: #FFD93D;
+  --color-neo-purple: #9254FF;
+  --color-neo-pink: #FF6B6B;
+  --color-neo-green: #6BCB77;
+  --color-neo-orange: #FF8066;
+  --color-neo-blue: #4D96FF;
+  --color-math-bg: #F3E8FF;
+  
+  --shadow-neo: 10px 10px 0px 0px #2D3436;
+  --shadow-neo-hover: 14px 14px 0px 0px #2D3436;
+  --shadow-neo-sm: 6px 6px 0px 0px #2D3436;
+}
+
+@layer base {
+  body {
+    @apply bg-math-bg text-[#2D3436] antialiased selection:bg-neo-purple selection:text-white overflow-x-hidden;
+    font-family: var(--font-sans);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    @apply font-black tracking-tight;
+  }
+}
+
+@layer components {
+  .neo-card {
+    @apply bg-white border-[3px] border-[#2D3436] rounded-[32px] shadow-neo transition-all duration-300 relative overflow-hidden;
+  }
+
+  .dotted-grid {
+    background-image: radial-gradient(rgba(45, 52, 54, 0.08) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+    background-position: 0 0;
+  }
+  
+  .neo-card-hover {
+    @apply hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-hover;
+  }
+
+  .neo-btn {
+    @apply relative px-6 py-3 font-black uppercase tracking-tight border-[4px] border-[#2D3436] rounded-xl shadow-neo-sm transition-all duration-200 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none cursor-pointer overflow-hidden;
+    font-family: var(--font-display);
+  }
+
+  .neo-btn-primary {
+    @apply bg-neo-yellow hover:bg-neo-yellow/90;
+  }
+
+  .neo-btn-secondary {
+    @apply bg-neo-purple text-white hover:bg-neo-purple/90;
+  }
+}
+
+.math-mono {
+  font-family: var(--font-mono);
+}
+
+.floating-symbol {
+  @apply absolute pointer-events-none opacity-10 font-black text-6xl select-none;
+  font-family: var(--font-mono);
+  filter: blur(0.5px);
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-math-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+.markdown-body {
+  @apply text-[#2D3436] leading-relaxed;
+}
+
+.markdown-body p {
+  @apply mb-4;
+}
+
+.markdown-body strong {
+  @apply font-black text-neo-purple;
+}

@@ -1,93 +1,150 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-@import "tailwindcss";
+import React from 'react';
+import { UserStats } from '../types.ts';
+import { motion, AnimatePresence } from 'motion/react';
+import { Trophy, Zap, Star, Target } from 'lucide-react';
 
-@theme {
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-
-  --color-neo-yellow: #FFD93D;
-  --color-neo-purple: #9254FF;
-  --color-neo-pink: #FF6B6B;
-  --color-neo-green: #6BCB77;
-  --color-neo-orange: #FF8066;
-  --color-neo-blue: #4D96FF;
-  --color-math-bg: #F3E8FF;
-  
-  --shadow-neo: 10px 10px 0px 0px #2D3436;
-  --shadow-neo-hover: 14px 14px 0px 0px #2D3436;
-  --shadow-neo-sm: 6px 6px 0px 0px #2D3436;
+interface StatsCardProps {
+  stats: UserStats;
+  lang?: 'en' | 'pt';
 }
 
-@layer base {
-  body {
-    @apply bg-math-bg text-[#2D3436] antialiased selection:bg-neo-purple selection:text-white overflow-x-hidden;
-    font-family: var(--font-sans);
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans);
-    @apply font-black tracking-tight;
-  }
-}
+export const StatsCard: React.FC<StatsCardProps> = ({ stats, lang = 'en' }) => {
+  const t = lang === 'pt' ? {
+    level: 'NÍVEL',
+    xp: 'PONTOS',
+    streak: 'SÉRIE',
+    solved: 'RESOLVIDOS'
+  } : {
+    level: 'LEVEL',
+    xp: 'POINTS',
+    streak: 'STREAK',
+    solved: 'SOLVED'
+  };
 
-@layer components {
-  .neo-card {
-    @apply bg-white border-[3px] border-[#2D3436] rounded-[32px] shadow-neo transition-all duration-300 relative overflow-hidden;
-  }
+  // Calculate XP progress to next level (500 XP per level for visualization)
+  const POINTS_PER_LEVEL = 500;
+  const xpInLevel = stats.points % POINTS_PER_LEVEL;
+  const progress = (xpInLevel / POINTS_PER_LEVEL) * 100;
+  const xpToNext = POINTS_PER_LEVEL - xpInLevel;
 
-  .dotted-grid {
-    background-image: radial-gradient(rgba(45, 52, 54, 0.08) 1.5px, transparent 1.5px);
-    background-size: 24px 24px;
-    background-position: 0 0;
-  }
-  
-  .neo-card-hover {
-    @apply hover:-translate-x-1 hover:-translate-y-1 hover:shadow-neo-hover;
-  }
+  return (
+    <div className="flex flex-wrap gap-5 items-center">
+      <StatBadge 
+        label={t.level} 
+        value={stats.level} 
+        icon={<Star size={16} fill="currentColor" />}
+        className="bg-neo-purple text-white"
+        showProgress={true}
+        progress={progress}
+        progressLabel={`${xpInLevel}/${POINTS_PER_LEVEL} XP`}
+        glowColor="rgba(157,126,254,0.4)"
+      />
+      <StatBadge 
+        label={t.xp} 
+        value={stats.points} 
+        icon={<Trophy size={16} fill="currentColor" />}
+        className="bg-neo-yellow text-[#1A1A1A]"
+        glowColor="rgba(255,233,0,0.3)"
+      />
+      <StatBadge 
+        label={t.streak} 
+        value={stats.streak} 
+        icon={<Zap size={16} fill="currentColor" />}
+        className="bg-neo-pink text-white"
+        pulse={stats.streak > 5}
+        glowColor="rgba(255,128,102,0.4)"
+      />
+      <StatBadge 
+        label={t.solved} 
+        value={stats.problemsSolved} 
+        icon={<Target size={16} fill="currentColor" />}
+        className="bg-neo-green text-[#1A1A1A]"
+        glowColor="rgba(107,203,119,0.4)"
+      />
+    </div>
+  );
+};
 
-  .neo-btn {
-    @apply relative px-6 py-3 font-black uppercase tracking-tight border-[4px] border-[#2D3436] rounded-xl shadow-neo-sm transition-all duration-200 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none cursor-pointer overflow-hidden;
-    font-family: var(--font-display);
-  }
+const StatBadge = ({ 
+  label, 
+  value, 
+  className, 
+  icon, 
+  showProgress = false, 
+  progress = 0,
+  progressLabel,
+  pulse = false,
+  glowColor
+}: { 
+  label: string, 
+  value: number, 
+  className: string, 
+  icon: React.ReactNode,
+  showProgress?: boolean,
+  progress?: number,
+  progressLabel?: string,
+  pulse?: boolean,
+  glowColor?: string
+}) => (
+  <motion.div 
+    layout
+    whileHover={{ scale: 1.05, y: -4 }}
+    className="relative group active:scale-95 transition-all"
+  >
+    {/* Background Glow */}
+    <div 
+      className="absolute inset-2 blur-xl opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" 
+      style={{ backgroundColor: glowColor }}
+    />
+    
+    <div 
+      className={`${className} relative z-10 px-6 py-4 rounded-[32px] border-[5px] border-[#1A1A1A] flex flex-col font-display font-black shadow-neo-sm transition-all group-hover:shadow-neo overflow-hidden ${pulse ? 'animate-pulse' : ''}`}
+    >
+      {showProgress && (
+        <div className="absolute bottom-0 left-0 w-full p-2 bg-black/5 flex flex-col gap-1">
+          <div className="flex justify-between items-center text-[7px] font-black tracking-widest opacity-60">
+            <span>PROGRESS</span>
+            <span>{progressLabel}</span>
+          </div>
+          <div className="h-2 bg-[#1A1A1A]/10 rounded-full w-full overflow-hidden border-[1px] border-[#1A1A1A]/5">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ type: "spring", stiffness: 50, damping: 20 }}
+              className="h-full bg-gradient-to-r from-white/40 via-white to-white/40 relative"
+            >
+              <motion.div 
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              />
+            </motion.div>
+          </div>
+        </div>
+      )}
 
-  .neo-btn-primary {
-    @apply bg-neo-yellow hover:bg-neo-yellow/90;
-  }
-
-  .neo-btn-secondary {
-    @apply bg-neo-purple text-white hover:bg-neo-purple/90;
-  }
-}
-
-.math-mono {
-  font-family: var(--font-mono);
-}
-
-.floating-symbol {
-  @apply absolute pointer-events-none opacity-10 font-black text-6xl select-none;
-  font-family: var(--font-mono);
-  filter: blur(0.5px);
-}
-
-@keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
-}
-
-.animate-math-float {
-  animation: float 10s ease-in-out infinite;
-}
-
-.markdown-body {
-  @apply text-[#2D3436] leading-relaxed;
-}
-
-.markdown-body p {
-  @apply mb-4;
-}
-
-.markdown-body strong {
-  @apply font-black text-neo-purple;
-}
+      <div className={`flex items-center gap-4 ${showProgress ? 'mb-4' : ''}`}>
+        <div className="w-10 h-10 bg-black/10 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-black/20 transition-colors">
+          {icon}
+        </div>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5 mb-1">
+             <div className="w-1.5 h-1.5 rounded-full bg-current opacity-40" />
+             <span className="text-[10px] font-black uppercase opacity-60 tracking-[0.2em] leading-none">{label}</span>
+          </div>
+          <AnimatePresence mode="popLayout">
+            <motion.span 
+              key={value}
+              initial={{ y: 15, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -15, opacity: 0 }}
+              className="text-2xl leading-none tracking-tighter italic"
+            >
+              {value.toLocaleString()}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);

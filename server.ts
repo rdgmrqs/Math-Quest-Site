@@ -1,8 +1,3 @@
-node_modules/
-build/
-dist/
-coverage/
-.DS_Store
-*.log
-.env*
-!.env.example
+# Supabase Configuration
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
