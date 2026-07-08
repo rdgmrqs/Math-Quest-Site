@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MathProblem } from '../types.ts';
 import { CheckCircle2, XCircle, ChevronRight, Zap, Brain, Hash, Layers } from 'lucide-react';
 import { translateText } from '../utils/translator.ts';
+import { getMathExplanation } from '../utils/explanations.ts';
 
 interface ProblemCardProps {
   problem: MathProblem;
@@ -541,6 +542,9 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
   const [feedback, setFeedback] = React.useState<'correct' | 'incorrect' | null>(null);
   const [showHint, setShowHint] = React.useState(false);
   const [showGuide, setShowGuide] = React.useState(true);
+  const [showExplanation, setShowExplanation] = React.useState(false);
+
+  const mathExplanation = getMathExplanation(problem.category, lang === 'pt' ? 'pt' : 'en');
 
   // 15 Puzzle specific states
   const [gridSize, setGridSize] = React.useState<number>(4);
@@ -612,6 +616,9 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
     pointsUp: 'pts em disputa',
     correct: 'EXCELENTE!',
     incorrect: 'INCORRETO',
+    explanationShow: '🎓 Explicação Matemática',
+    explanationHide: '🎓 Ocultar Explicação',
+    mathConcept: 'Conceito Matemático:',
     difficulty: {
       easy: 'FÁCIL',
       medium: 'MÉDIO',
@@ -626,6 +633,9 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
     pointsUp: 'pts for grabs',
     correct: 'EXCELLENT!',
     incorrect: 'INCORRECT',
+    explanationShow: '🎓 Mathematical Explanation',
+    explanationHide: '🎓 Hide Explanation',
+    mathConcept: 'Mathematical Concept:',
     difficulty: {
       easy: 'EASY',
       medium: 'MEDIUM',
@@ -636,6 +646,7 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
   React.useEffect(() => {
     setShowHint(false);
     setShowGuide(false);
+    setShowExplanation(false);
   }, [problem.id]);
 
   React.useEffect(() => {
@@ -1438,6 +1449,7 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
     
     if (isCorrect) {
       setFeedback('correct');
+      setShowExplanation(true);
       setTimeout(() => {
         onSolve(true);
         setUserInput('');
@@ -1572,6 +1584,14 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
                       💡 {showHint ? t.hintHide : t.hintShow}
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => setShowExplanation(!showExplanation)}
+                    className="px-4 py-2 bg-neo-pink text-white hover:bg-opacity-90 border-[3px] border-[#2D3436] rounded-xl font-black text-[10px] uppercase tracking-wider shadow-neo-sm hover:shadow-neo transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    🎓 {showExplanation ? t.explanationHide : t.explanationShow}
+                  </button>
                   
                   {/* Neon Active Win Indicator badge */}
                   <div className="px-4 py-2 bg-neo-green/10 border-[3px] border-[#2D3436] rounded-xl flex items-center gap-2">
@@ -1600,6 +1620,29 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
                   )}
                 </AnimatePresence>
               )}
+
+              <AnimatePresence>
+                {showExplanation && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="w-full bg-neo-pink/5 dark:bg-neo-pink/10 border-[3px] border-neo-pink rounded-2xl p-5 overflow-hidden text-left"
+                  >
+                    <div className="flex flex-wrap items-center gap-2 mb-2 text-[#2D3436] dark:text-white font-black text-xs md:text-sm uppercase tracking-wide">
+                      <span>🎓</span>
+                      <span className="text-zinc-500 dark:text-zinc-400">{t.mathConcept}</span>
+                      <span className="text-neo-pink bg-neo-pink/10 px-2 py-0.5 rounded-lg border border-neo-pink/30 font-mono text-xs font-black">
+                        {mathExplanation.concept}
+                      </span>
+                    </div>
+                    <p className="font-sans text-xs md:text-sm font-medium text-[#2D3436] dark:text-zinc-300 leading-relaxed">
+                      {mathExplanation.body}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <AnimatePresence>
                 {showGuide && (
@@ -2750,8 +2793,8 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
                 </div>
               </div>
               
-              {problem.hint && (
-                <div className="mt-4 flex flex-col items-start gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {problem.hint && (
                   <button
                     type="button"
                     onClick={() => setShowHint(!showHint)}
@@ -2759,24 +2802,57 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
                   >
                     💡 {showHint ? t.hintHide : t.hintShow}
                   </button>
-                  
-                  <AnimatePresence>
-                    {showHint && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                        animate={{ opacity: 1, height: "auto", marginTop: 8 }}
-                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="w-full bg-amber-50 border-[3px] border-dashed border-[#2D3436]/40 rounded-2xl p-5 overflow-hidden"
-                      >
-                        <p className="font-mono text-xs md:text-sm font-black text-[#2D3436]/70 leading-relaxed uppercase">
-                          🔧 {translateText(problem.hint, lang === 'pt' ? 'pt' : 'en')}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowExplanation(!showExplanation)}
+                  className="px-5 py-2.5 bg-neo-pink/20 hover:bg-neo-pink text-white hover:text-white bg-neo-pink border-[3px] border-[#2D3436] rounded-xl font-black text-[10px] uppercase tracking-wider shadow-neo-sm hover:shadow-neo transition-all cursor-pointer"
+                >
+                  🎓 {showExplanation ? t.explanationHide : t.explanationShow}
+                </button>
+              </div>
+
+              {problem.hint && (
+                <AnimatePresence>
+                  {showHint && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="w-full bg-amber-50 border-[3px] border-dashed border-[#2D3436]/40 rounded-2xl p-5 overflow-hidden mt-3"
+                    >
+                      <p className="font-mono text-xs md:text-sm font-black text-[#2D3436]/70 leading-relaxed uppercase">
+                        🔧 {translateText(problem.hint, lang === 'pt' ? 'pt' : 'en')}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
+
+              <AnimatePresence>
+                {showExplanation && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full bg-neo-pink/5 border-[3px] border-neo-pink rounded-2xl p-5 overflow-hidden text-left mt-3"
+                  >
+                    <div className="flex flex-wrap items-center gap-2 mb-2 text-[#2D3436] font-black text-xs md:text-sm uppercase tracking-wide">
+                      <span>🎓</span>
+                      <span className="text-zinc-500">{t.mathConcept}</span>
+                      <span className="text-neo-pink bg-neo-pink/10 px-2 py-0.5 rounded-lg border border-neo-pink/30 font-mono text-[10px] md:text-xs font-black">
+                        {mathExplanation.concept}
+                      </span>
+                    </div>
+                    <p className="font-sans text-xs md:text-sm font-medium text-[#2D3436] leading-relaxed">
+                      {mathExplanation.body}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {problem.visualData && (
@@ -2805,6 +2881,7 @@ export const ProblemCard: React.FC<ProblemCardProps> = ({ problem, onSolve, lang
 
                         if (isCorrect) {
                           setFeedback('correct');
+                          setShowExplanation(true);
                           setTimeout(() => {
                             onSolve(true);
                             setUserInput('');
